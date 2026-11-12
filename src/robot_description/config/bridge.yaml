@@ -1,0 +1,51 @@
+# ROS 2 <-> Gazebo Fortress topics. Type names use the ignition.msgs prefix, accepted by every
+# ros_gz release for Humble (newer ones print a harmless "deprecated, using gz.msgs" note).
+
+# simulation clock: every node runs with use_sim_time:=true
+- ros_topic_name: "clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "ignition.msgs.Clock"
+  direction: GZ_TO_ROS
+
+# velocity command (motor_node) -> DiffDrive
+- ros_topic_name: "cmd_vel"
+  gz_topic_name: "cmd_vel"
+  ros_type_name: "geometry_msgs/msg/Twist"
+  gz_type_name: "ignition.msgs.Twist"
+  direction: ROS_TO_GZ
+
+# wheel odometry: only its speed is used by sim_base_node (/odom is built like on the robot)
+- ros_topic_name: "wheel_odom"
+  gz_topic_name: "wheel_odom"
+  ros_type_name: "nav_msgs/msg/Odometry"
+  gz_type_name: "ignition.msgs.Odometry"
+  direction: GZ_TO_ROS
+
+# gyro (same topic name as the real arduino_bridge_node output)
+- ros_topic_name: "imu/data"
+  gz_topic_name: "imu"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "ignition.msgs.IMU"
+  direction: GZ_TO_ROS
+
+# camera
+- ros_topic_name: "camera/image"
+  gz_topic_name: "camera/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  direction: GZ_TO_ROS
+
+# camera pan servo target angle (rad), from sim_base_node
+- ros_topic_name: "camera_pan_cmd"
+  gz_topic_name: "camera_pan_cmd"
+  ros_type_name: "std_msgs/msg/Float64"
+  gz_type_name: "ignition.msgs.Double"
+  direction: ROS_TO_GZ
+
+# joint angles (wheels, camera pan) for robot_state_publisher
+- ros_topic_name: "joint_states"
+  gz_topic_name: "/world/qr_world/model/robot/joint_state"
+  ros_type_name: "sensor_msgs/msg/JointState"
+  gz_type_name: "ignition.msgs.Model"
+  direction: GZ_TO_ROS

@@ -1,0 +1,12 @@
+guidance_node:
+  ros__parameters:
+    control_rate: 10.0
+    max_linear: 0.20
+    max_angular: 0.80
+    k_linear: 0.8
+    k_angular: 1.5
+    dist_tolerance: 0.10
+    yaw_tolerance: 0.15
+    rotate_first_threshold: 0.5
+    align_final_heading: true
+    pose_timeout: 5.0

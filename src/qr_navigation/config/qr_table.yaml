@@ -1,0 +1,8 @@
+# Checkpoint poses in the WORLD frame (Gazebo world origin = robot spawn point, yaw 0).
+# Ids are the strings encoded in the QR textures of robot_description/worlds.
+# x, y, theta = where the robot stands (camera facing the panel) when it reads the QR.
+# Panels (qr_world.sdf) are at (1.5, 0.0), (3.0, 0.8), (4.5, -0.8); checkpoint = panel x - 0.8 m.
+qr_codes:
+  WAYPOINT_1: {x: 0.7, y: 0.0,  theta: 0.0}
+  WAYPOINT_2: {x: 2.2, y: 0.8,  theta: 0.0}
+  WAYPOINT_3: {x: 3.7, y: -0.8, theta: 0.0}

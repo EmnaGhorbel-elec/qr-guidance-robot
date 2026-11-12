@@ -1,0 +1,36 @@
+mission_node:
+  ros__parameters:
+    mission: ['WAYPOINT_1', 'WAYPOINT_2', 'WAYPOINT_3']
+    approach_distance: 0.5   # m before each checkpoint, so the robot arrives facing the QR
+    start_x: 0.0             # robot pose in the WORLD when the mission starts (Gazebo spawn)
+    start_y: 0.0
+    start_yaw: 0.0
+    require_ready: true      # wait for /robot/ready (sim_base_node: gyro calibrated), as on the robot
+    start_delay: 3.0         # s after the robot is ready (auto_start only)
+    fix_timeout: 8.0         # s to wait for a QR fix at a checkpoint
+    leg_timeout: 90.0        # s max per leg before the mission is aborted
+    fix_tolerance: 0.3       # m, localization fix vs expected checkpoint (QRs are > 1.5 m apart)
+    fix_retries: 2           # re-approach attempts per QR when no fix arrives
+    correct_yaw: false       # heading comes from the gyro, as on the robot
+
+    # final approach steered by the QR: bearing (pixel + camera pan) and distance (k / w_px)
+    servo: true
+    servo_k: 160.6           # f_px x QR side = 554.3 x 0.290 m (textures: 420 of 580 px on a 0.40 m panel)
+    auto_calibrate: true     # re-measure k at the first approach point (known distance)
+    servo_fov: 1.047         # camera horizontal fov (robot_gazebo.urdf)
+    camera_offset: 0.15      # pan axis ahead of base_link (camera_pan_joint in robot_gazebo.urdf)
+    standoff: 0.8            # m, base-to-QR distance to stop at
+    servo_blind_wait: 3.0    # s without the QR before driving blind to the table checkpoint
+    servo_timeout: 30.0
+
+    # camera pan servo (sim_base_node emulates the Mega's servo)
+    use_pan: true
+    pan_center: 90
+    pan_sign: 1.0
+    pan_lag: 0.0             # s extra delay before the servo starts to move
+    servo_speed_dps: 344.0   # pan joint speed limit in robot_gazebo.urdf (6 rad/s)
+    det_max_age: 1.0
+
+    # fix = QR position - measured distance along measured bearing (gyro heading)
+    measured_fix: true
+    fix_max_jump: 1.0

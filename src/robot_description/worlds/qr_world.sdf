@@ -1,0 +1,129 @@
+<?xml version="1.0" ?>
+<!-- TEXTURE_DIR is replaced with the absolute install path by gazebo.launch.py.
+     If you open this file directly with `ign gazebo`, replace it by hand. -->
+<sdf version="1.9">
+  <world name="qr_world">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin filename="libignition-gazebo-physics-system.so" name="ignition::gazebo::systems::Physics"></plugin>
+    <plugin filename="libignition-gazebo-sensors-system.so" name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin filename="libignition-gazebo-scene-broadcaster-system.so" name="ignition::gazebo::systems::SceneBroadcaster"></plugin>
+    <plugin filename="libignition-gazebo-user-commands-system.so" name="ignition::gazebo::systems::UserCommands"></plugin>
+    <!-- needed by the robot's gyro (imu sensor in robot_gazebo.urdf) -->
+    <plugin filename="libignition-gazebo-imu-system.so" name="ignition::gazebo::systems::Imu"></plugin>
+
+    <!-- Bright ambient light so the QR faces are never in shadow -->
+    <scene>
+      <ambient>0.7 0.7 0.7 1</ambient>
+      <background>0.8 0.9 1.0 1</background>
+      <shadows>false</shadows>
+    </scene>
+
+    <!-- Sun shines toward +x, so faces pointing at the robot (-x) are lit -->
+    <light type="directional" name="sun">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- QR panels: 0.40 m square, thin along X, so the big faces point along -X
+         (toward the robot spawn at the origin, which looks along +X).
+         Staggered in Y so no panel hides another from the camera. -->
+
+    <model name="qr_waypoint_1">
+      <static>true</static>
+      <pose>1.5 0.0 0.2 0 0 0</pose>
+      <link name="panel">
+        <collision name="collision">
+          <geometry><box><size>0.02 0.4 0.4</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.02 0.4 0.4</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>TEXTURE_DIR/qr_1.png</albedo_map>
+                <roughness>1.0</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="qr_waypoint_2">
+      <static>true</static>
+      <pose>3.0 0.8 0.2 0 0 0</pose>
+      <link name="panel">
+        <collision name="collision">
+          <geometry><box><size>0.02 0.4 0.4</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.02 0.4 0.4</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>TEXTURE_DIR/qr_2.png</albedo_map>
+                <roughness>1.0</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="qr_waypoint_3">
+      <static>true</static>
+      <pose>4.5 -0.8 0.2 0 0 0</pose>
+      <link name="panel">
+        <collision name="collision">
+          <geometry><box><size>0.02 0.4 0.4</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.02 0.4 0.4</size></box></geometry>
+          <material>
+            <ambient>1 1 1 1</ambient>
+            <diffuse>1 1 1 1</diffuse>
+            <pbr>
+              <metal>
+                <albedo_map>TEXTURE_DIR/qr_3.png</albedo_map>
+                <roughness>1.0</roughness>
+                <metalness>0.0</metalness>
+              </metal>
+            </pbr>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
