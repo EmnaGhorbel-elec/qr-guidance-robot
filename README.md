@@ -1,12 +1,19 @@
 # QR Guidance Robot
 
-A four-wheel mobile robot that finds its own position from QR codes. It drives to three QR panels in turn. At each one it locates the QR with a camera on a pan servo, steers onto it, computes where it really is from the QR's apparent size and position in the image, and cancels the odometry drift accumulated so far.
+A four-wheel mobile robot that uses QR codes to find its way. The repository has two parts:
 
-This repository is the full ROS 2 software running in simulation (**ROS 2 Humble** and **Gazebo Fortress**). Navigation, vision and control are the same nodes used on the real robot. Only the hardware layer is replaced by a simulated one.
+1. **Simulation** (ROS 2 Humble and Gazebo Fortress): the robot drives to three QR panels in turn and finds its own position from each one, cancelling odometry drift. Measured results are below.
+2. **Real robot** (Raspberry Pi and Arduino Mega): a redesigned, map-free navigation where each QR code carries a text command (turn, move, wait, stop) that the robot reads and executes. See [Real robot](#real-robot).
+
+In simulation, the robot drives to three QR panels in turn. At each one it locates the QR with a camera on a pan servo, steers onto it, computes where it really is from the QR's apparent size and position in the image, and cancels the odometry drift accumulated so far.
+
+The simulation vision and control nodes are the ones used on the real robot. Only the hardware layer is replaced by a simulated one. The real robot uses a different navigation layer (`qr_autonomy`), described in its own section.
 
 ![Ground-truth path of the robot versus its odometry in a Gazebo run](docs/sim_run.png)
 
-## How it works
+Git tag `v1-simulation` marks the simulation-only version.
+
+## How it works (simulation)
 
 1. **Vision.** `qr_detector_node` decodes the camera image and publishes the QR id, its centre, its size in pixels and the capture time of the frame. `scan_controller_node` sweeps the camera servo until it sees the target QR, then keeps it in view while the robot turns.
 2. **Localisation.** The distance to a QR is `k / apparent size`. The direction comes from the pixel position plus the camera pan angle. With the QR's known position in the world, `localization_node` computes a position fix.
@@ -48,12 +55,14 @@ flowchart LR
 |---|---|
 | `robot_description` | URDF (skid-steer base, camera on a pan joint, gyro, lidar), meshes, QR world, Gazebo launch, ROS to Gazebo bridge |
 | `robot_sim` | `sim_base_node`, the simulated hardware layer: odometry, `/robot/ready`, camera servo protocol |
-| `qr_guidance_robot` | `qr_detector_node` and `scan_controller_node` |
-| `qr_navigation` | `localization_node` and `mission_node`, with the QR table and mission parameters |
+| `qr_guidance_robot` | `qr_detector_node` and `scan_controller_node` (simulation), plus the USB camera launch and config for the real robot |
+| `qr_navigation` | `localization_node` and `mission_node`, with the QR table and mission parameters (simulation) |
 | `robot_control` | `command_node` and `motor_node` |
 | `qr_robot_bringup` | `full_system.launch.py` (starts everything) and `check_system` (PASS/FAIL report) |
+| `robot_hardware` | Real robot: Arduino firmware, serial bridge, servo scan controller, power-on boot scripts |
+| `qr_autonomy` | Real robot: map-free QR-command navigator and QR sheet generator |
 
-## Quick start
+## Quick start (simulation)
 
 Requires Ubuntu 22.04 and ROS 2 Humble (`ros-humble-desktop`).
 
@@ -67,7 +76,7 @@ sudo apt install ros-humble-ros-gz ros-humble-robot-state-publisher \
 Build and run (the repository root is the colcon workspace):
 
 ```bash
-git clone https://github.com/<your-username>/qr-guidance-robot.git
+git clone https://github.com/EmnaGhorbel-elec/qr-guidance-robot.git
 cd qr-guidance-robot
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install
@@ -120,7 +129,7 @@ Other launch files:
 - `ros2 launch qr_guidance_robot sim_qr.launch.py` runs Gazebo and the detector only. The robot stays in front of the first QR.
 - `ros2 launch robot_description display.launch.py` shows the robot model in RViz with joint sliders and no Gazebo.
 
-## Configuration
+## Configuration (simulation)
 
 | To change | Edit |
 |---|---|
@@ -135,7 +144,7 @@ To add a QR, generate an image that encodes the new id, put it in `worlds/materi
 
 ## Tests
 
-Unit tests (pure Python, no Gazebo, 27 tests covering geometry, frames, the servo model and gyro calibration):
+Simulation unit tests (pure Python, no Gazebo, 27 tests covering geometry, frames, the servo model and gyro calibration):
 
 ```bash
 cd src
@@ -144,11 +153,18 @@ PYTHONPATH=robot_control:qr_navigation:robot_sim:qr_guidance_robot python3 -m py
     robot_sim/test qr_guidance_robot/test
 ```
 
+Real-robot tests (command parsing, kinematics, IMU parsing, servo sweep, boot script, and a closed-loop room simulation of the navigator that runs without ROS):
+
+```bash
+cd src
+PYTHONPATH=qr_autonomy:robot_hardware:robot_control python3 -m pytest qr_autonomy/test robot_hardware/test
+```
+
 System test: `check_system`, as shown in the quick start. It verifies that every node runs, that camera, odometry, gyro, servo and detections flow, and that the mission ends `DONE` with no QR missed.
 
-## Results
+## Results (simulation)
 
-Measured headless in Gazebo Fortress 6.16, with ground truth read from Gazebo.
+Measured headless in Gazebo Fortress 6.16, with ground truth read from Gazebo, on the `v1-simulation` tag.
 
 | Measure | Result |
 |---|---|
@@ -158,7 +174,7 @@ Measured headless in Gazebo Fortress 6.16, with ground truth read from Gazebo.
 | Position fix error vs. ground truth | 3.2 cm median, 3.4 cm max (9 fixes) |
 | Wrong start position (0.20 m) | corrected at the first QR |
 
-## Limitations
+## Limitations (simulation version)
 
 - QRs correct position, not heading. A start heading error of *e* rad shifts later fixes sideways by about 0.9·*e* m, so the robot must start at (0, 0) facing +x.
 - The robot stops 0.85 to 0.90 m from each QR (stand-off 0.8 m plus a tolerance of up to 0.12 m).
@@ -166,7 +182,7 @@ Measured headless in Gazebo Fortress 6.16, with ground truth read from Gazebo.
 - Mission order and QR table are fixed.
 - `guidance_node` and `nav.launch.py` in `qr_navigation` are an earlier stand-alone guidance kept for reference. Do not launch them with the full system, since they also command the wheels.
 
-## Troubleshooting
+## Troubleshooting (simulation)
 
 | Symptom | Cause and fix |
 |---|---|
@@ -188,7 +204,62 @@ Measured headless in Gazebo Fortress 6.16, with ground truth read from Gazebo.
 | MPU-6050 gyro, bias measured at power-on | Gazebo IMU with bias and noise, bias measured the same way |
 | `/odom` from commanded speed and gyro heading | `/odom` from wheel speed and gyro heading (`linear_source: command` mimics the robot) |
 
-The hardware bridge package of the real robot is not part of this repository.
+## Real robot
+
+On the real robot the table-based approach was not reliable: there are no wheel encoders, so position comes from dead reckoning. The navigation was redesigned to need no map and no known QR positions. The only knowledge the robot has is the text of the QR it is looking at. The software is in `robot_hardware` and `qr_autonomy`.
+
+### Command QR format
+
+`<id>|<ACTION>|<value>`
+
+| Text | Meaning |
+|---|---|
+| `C02\|TURN_L\|60` | turn 60 degrees left on the spot (gyro) |
+| `C04\|TURN_R\|90` | turn 90 degrees right |
+| `C03\|MOVE\|1.0` | drive 1.0 m straight (open loop) |
+| `C06\|WAIT\|3` | stand still 3 s |
+| `C01\|FOLLOW` | no action, look for the next QR |
+| `C07\|STOP` | end of the run |
+
+Ids must be unique, executed ids are ignored afterwards. Several actions can be chained in one QR. `qr_autonomy/tools/make_command_qrs.py` generates printable QR sheets (PNG and A4 PDF) and decodes each code back to verify it.
+
+### Behavior loop
+
+```
+INIT -> SWEEP -> ALIGN -> APPROACH -> READ -> EXECUTE -> back to SWEEP ... until STOP
+```
+
+- **SWEEP:** the camera servo sweeps 90 degrees right, then left. The servo angle at the first valid QR is its bearing.
+- **ALIGN:** the robot turns on the spot (gyro heading) to face the QR.
+- **APPROACH:** it drives toward the QR while the camera tracks it, and stops at 0.8 m (distance from QR size).
+- **READ and EXECUTE:** it stands still, reads the text and runs the action.
+- **Recovery:** nothing in view after a sweep, turn 90 degrees and sweep again (a full turn without a QR ends in FAILED). QR lost for 3 s, stop and sweep again. The robot never drives blind.
+
+### Hardware
+
+| Part | Role |
+|---|---|
+| Raspberry Pi (ROS 2 Humble in Docker) | runs all ROS nodes |
+| Arduino Mega | motor PWM, servo, IMU readout, over USB serial (9600 baud) |
+| 2 x L298N and 4 DC motors | skid-steer drive |
+| SG90 servo (own 5 V buck converter) | camera pan |
+| MPU-6050 | gyro yaw rate |
+| USB camera | QR detection |
+
+Wiring and the step-by-step bring-up are in `robot_hardware/README_HW.md`. Power-on auto-start (systemd and Docker) is in `robot_hardware/boot/README_BOOT.md`. Navigation tuning and first-run steps are in `qr_autonomy/README_AUTONOMY.md`.
+
+Safety features in the serial bridge: exclusive port lock, a check that the robot turns the same way as the commanded rotation (it stops the wheels otherwise), detection of duplicate publishers on `/cmd_vel`, a gyro calibration gate before any motion, and a motor watchdog in the firmware.
+
+### Status and limitations
+
+The robot runs on the real hardware and executes QR commands, with limitations:
+
+- Motor speed regulation is open loop (no encoders), so `MOVE` distances are only approximate.
+- The IMU is used only for gyro yaw. There is no fusion with odometry yet.
+- No obstacle sensing. The course must be clear.
+- OpenCV decodes a QR only when it is about 100 px wide in the image, which limits the discovery range.
+
+Planned improvements: wheel encoders with closed-loop speed control, and gyro and odometry fusion with an EKF.
 
 ## Authors
 
