@@ -1,0 +1,8 @@
+# One command per QR, ids must be unique. Print with make_command_qrs.py.
+C01|FOLLOW
+C02|TURN_L|60
+C03|MOVE|1.0
+C04|TURN_R|90
+C05|MOVE|0.5
+C06|WAIT|3
+C07|STOP
