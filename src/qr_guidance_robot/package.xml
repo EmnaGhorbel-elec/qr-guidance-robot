@@ -4,7 +4,7 @@
   <name>qr_guidance_robot</name>
   <version>0.0.1</version>
   <description>QR detector and camera scan controller (Python)</description>
-  <maintainer email="you@example.com">emna</maintainer>
+  <maintainer email="emnaaghorbell@gmail.com">emna</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
@@ -12,6 +12,8 @@
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+    <exec_depend>cv_bridge</exec_depend>
+  <exec_depend>usb_cam</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>python3-opencv</exec_depend>
   <exec_depend>python3-numpy</exec_depend>

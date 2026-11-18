@@ -1,0 +1,11 @@
+usb_cam_node_exe:
+  ros__parameters:
+    video_device: "/dev/video0"
+    image_width: 640
+    image_height: 480
+    pixel_format: "yuyv"
+    framerate: 10.0
+    camera_name: "qr_camera"
+    camera_info_url: ""
+    io_method: "mmap"
+    frame_id: "camera_optical_link"

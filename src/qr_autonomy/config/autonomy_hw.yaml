@@ -1,0 +1,46 @@
+# Parameters of the table-free autonomy on the REAL robot.
+# Write real numbers WITH a decimal point (1.0, not 1): ROS rejects an int for a float parameter.
+
+scan_controller_node:
+  ros__parameters:
+    center_angle: 90              # servo angle = camera straight ahead (the Mega boots at 90)
+    min_angle: 0
+    max_angle: 180
+    servo_sign: 1.0               # -1.0 if 'G120' turns the camera to the RIGHT
+    hfov: 1.047                   # camera horizontal field of view, rad (60 deg is a guess: measure)
+    sweep_extent: 90.0            # deg each side. Reduce to 85.0 if the servo buzzes at the end stops
+    sweep_step: 10.0              # deg per step (must stay below hfov = 60 deg)
+    sweep_dwell: 0.45             # s per step. The camera runs at 10 fps and decoding takes 50-300 ms
+    sweep_settle: 0.8
+    accept_regex: '^C\d+\|'       # only command QRs are locked
+    min_width_px: 30.0            # lock gate. NB: OpenCV only decodes a QR wider than ~100 px (see README_AUTONOMY.md)
+    lost_timeout: 1.5
+    servo_speed_dps: 450.0
+
+autonomy_node:
+  ros__parameters:
+    # QR size constant: distance(camera -> QR) = servo_k / w_px,  k = focal_px * QR_side_m
+    # !! MEASURE IT (README_AUTONOMY.md step 3). 83.0 = 554 px x 0.15 m is only a guess.
+    servo_k: 83.0
+    standoff: 0.8                 # m: stop this far from the QR before reading it
+    slow_zone: 0.4
+    v_cruise: 0.15                # m/s toward a QR
+    v_min: 0.08                   # m/s (below it the wheels stall, see min_pwm in the bridge)
+    move_speed: 0.15              # m/s during a MOVE command
+    w_max: 0.8                    # rad/s
+    w_min: 0.35                   # rad/s: smallest turn rate that really rotates a skid-steer robot
+    k_turn: 1.5
+    k_head: 1.5
+    turn_tol: 0.07                # rad (4 deg)
+    turn_hold: 0.25
+    turn_timeout: 25.0
+    det_max_age: 1.0
+    blind_timeout: 3.0            # s without the QR while turning / driving toward it -> stop + sweep
+    approach_timeout: 90.0
+    read_settle: 0.5
+    rotate_deg: 90.0              # nothing seen in a sweep: turn this much and sweep again
+    max_rotations: 4              # 4 x 90 deg = full turn without a QR -> FAILED
+    max_lost: 4
+    autostart: false              # true = start by itself `start_delay` s after /robot/ready
+    start_delay: 5.0
+    require_ready: true
